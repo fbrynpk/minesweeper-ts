@@ -17,7 +17,7 @@ export enum CellState {
   flagged,
 }
 
-export type Cell = { value: CellValue; state: CellState };
+export type Cell = { value: CellValue; state: CellState; lose?: boolean };
 
 export enum Face {
   default = "😊",
@@ -25,3 +25,14 @@ export enum Face {
   lost = "😵",
   win = "😎",
 }
+
+export type CellProps = {
+  topLeftCell: Cell | null;
+  topCell: Cell | null;
+  topRightCell: Cell | null;
+  leftCell: Cell | null;
+  rightCell: Cell | null;
+  bottomLeftCell: Cell | null;
+  bottomCell: Cell | null;
+  bottomRightCell: Cell | null;
+};
