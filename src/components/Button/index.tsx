@@ -7,9 +7,24 @@ interface ButtonProps {
   col: number;
   state: CellState;
   value: CellValue;
+  onClick: (
+    rowParam: number,
+    colParam: number
+  ) => React.MouseEventHandler<HTMLDivElement> | undefined;
+  onContext: (
+    rowParam: number,
+    colParam: number
+  ) => React.MouseEventHandler<HTMLDivElement> | undefined;
 }
 
-const Button: React.FC<ButtonProps> = ({ row, col, state, value }) => {
+const Button: React.FC<ButtonProps> = ({
+  row,
+  col,
+  state,
+  value,
+  onClick,
+  onContext,
+}) => {
   const renderContent = (): React.ReactNode => {
     if (state === CellState.clicked) {
       if (value === CellValue.bomb) {
@@ -27,6 +42,8 @@ const Button: React.FC<ButtonProps> = ({ row, col, state, value }) => {
 
   return (
     <div
+      onClick={onClick(row, col)}
+      onContextMenu={onContext(row, col)}
       className={`Button ${
         state === CellState.clicked ? "clicked" : ""
       } value-${value}`}
