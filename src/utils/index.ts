@@ -1,5 +1,3 @@
-import { getValue } from "@testing-library/user-event/dist/utils";
-import { TLSSocket } from "tls";
 import { Cell, CellValue, CellState } from "../types/index";
 
 let MAX_ROWS = 9;
