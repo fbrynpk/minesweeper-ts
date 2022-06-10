@@ -18,8 +18,8 @@ export enum CellState {
 }
 
 export enum CellStatus {
-  lost,
-  alive,
+  default,
+  finish,
 }
 
 export type Cell = {
@@ -46,3 +46,9 @@ export type CellProps = {
   bottomCell: Cell | null;
   bottomRightCell: Cell | null;
 };
+
+export enum Difficulty {
+  beginner,
+  intermediate,
+  expert,
+}

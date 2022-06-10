@@ -5,6 +5,7 @@ This project was deployed online by vercel, you can open the game using the webs
 https://minesweeper-ts.vercel.app/
 
 ## The game has the following rules:
+
 1. Clicking a mine ends the game.
 2. Clicking a square with an adjacent mine clears that square and shows the number of mines touching it.
 3. Clicking a square with no adjacent mine clears that square and clicks all adjacent squares.
@@ -13,6 +14,7 @@ https://minesweeper-ts.vercel.app/
 6. The numbers reflect the number of mines touching a square.
 
 ## Game Controls:
+
 1. Press the emoji in the middle to restart the game
 2. Clicking or flagging any square on the board will automatically start the timer
 3. You win by clicking every clickable square there is that is not a bomb
