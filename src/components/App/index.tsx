@@ -9,7 +9,7 @@ import {
 import Button from "../Button";
 import "./App.scss";
 import NumberDisplay from "../NumberDisplay";
-import { Cell, CellState, CellValue, Face } from "../../types";
+import { Cell, CellState, CellStatus, CellValue, Face } from "../../types";
 
 const App: React.FC = () => {
   const [cells, setCells] = useState<Cell[][]>(generateCells());
@@ -22,11 +22,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleMouseDown = (): void => {
-      setFace(Face.clicked);
+      !lost ? setFace(Face.clicked) : setFace(Face.lost);
     };
 
     const handleMouseUp = (): void => {
-      setFace(Face.default);
+      !lost ? setFace(Face.default) : setFace(Face.lost);
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -36,10 +36,10 @@ const App: React.FC = () => {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousedown", handleMouseDown);
     };
-  }, []);
+  }, [lost]);
 
   useEffect(() => {
-    if (start) {
+    if (start && !lost) {
       const timer = setInterval(() => {
         setTime(time + 1);
       }, 1000);
@@ -48,7 +48,7 @@ const App: React.FC = () => {
         clearInterval(timer);
       };
     }
-  }, [start, time]);
+  }, [start, time, lost]);
 
   useEffect(() => {
     if (win) {
@@ -65,71 +65,75 @@ const App: React.FC = () => {
     }
   }, [lost]);
 
-  const handleCellClick = (rowParam: number, colParam: number) => (): void => {
-    let currentCell = cells[rowParam][colParam];
-    let slicedCell = cells.slice();
+  const handleCellClick =
+    (rowParam: number, colParam: number) =>
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
+      let currentCell = cells[rowParam][colParam];
+      let slicedCell = cells.slice();
 
-    //Avoid clicking a bomb on first try
-    if (!start) {
-      while (currentCell.value === CellValue.bomb) {
-        console.log("hit a bomb, regenerating cells", currentCell);
-        slicedCell = generateCells();
-        currentCell = slicedCell[rowParam][colParam];
+      //Avoid clicking a bomb on first try
+      if (!start) {
+        while (currentCell.value === CellValue.bomb) {
+          console.log("hit a bomb, regenerating cells", currentCell);
+          slicedCell = generateCells();
+          currentCell = slicedCell[rowParam][colParam];
+        }
+        setStart(true);
       }
-      setStart(true);
-    }
 
-    //Nothing happens when clicking a clicked cells or flagged cells
-    if ([CellState.clicked, CellState.flagged].includes(currentCell.state)) {
-      return;
-    }
+      //Nothing happens when clicking a clicked cells or flagged cells
+      if ([CellState.clicked, CellState.flagged].includes(currentCell.state)) {
+        return;
+      }
 
-    //All clicking possibilities
-    if (currentCell.value === CellValue.bomb) {
-      setLost(true);
-      slicedCell[rowParam][colParam].lose = true;
-      slicedCell = showAllBombs();
-      setCells(slicedCell);
-    } else if (currentCell.value === CellValue.none) {
-      slicedCell = checkAroundCell(slicedCell, rowParam, colParam);
-      setCells(slicedCell);
-    } else {
-      slicedCell[rowParam][colParam].state = CellState.clicked;
-      setCells(slicedCell);
-    }
-
-    //Check Win
-    let SafeCellsExist = false;
-    for (let row = 0; row < MAX_ROWS; row++) {
-      for (let col = 0; col < MAX_COLS; col++) {
-        const currentCell = slicedCell[row][col];
-
-        if (
-          currentCell.value !== CellValue.bomb &&
-          currentCell.state === CellState.open
-        ) {
-          SafeCellsExist = true;
-          break;
+      if (!lost) {
+        //All clicking possibilities
+        if (currentCell.value === CellValue.bomb) {
+          setLost(true);
+          slicedCell[rowParam][colParam].lose = true;
+          slicedCell = showAllBombs();
+          setCells(slicedCell);
+        } else if (currentCell.value === CellValue.none) {
+          slicedCell = checkAroundCell(slicedCell, rowParam, colParam);
+          setCells(slicedCell);
+        } else {
+          slicedCell[rowParam][colParam].state = CellState.clicked;
+          setCells(slicedCell);
         }
       }
-    }
-    //Replace bomb cells with flagged cells
-    if (!SafeCellsExist) {
-      slicedCell = slicedCell.map((row) =>
-        row.map((cell) => {
-          if (cell.value === CellValue.bomb) {
-            return {
-              ...cell,
-              state: CellState.flagged,
-            };
+
+      //Check Win
+      let SafeCellsExist = false;
+      for (let row = 0; row < MAX_ROWS; row++) {
+        for (let col = 0; col < MAX_COLS; col++) {
+          const currentCell = slicedCell[row][col];
+
+          if (
+            currentCell.value !== CellValue.bomb &&
+            currentCell.state === CellState.open
+          ) {
+            SafeCellsExist = true;
+            break;
           }
-          return cell;
-        })
-      );
-      setWin(true);
-    }
-    setCells(slicedCell);
-  };
+        }
+      }
+      //Replace bomb cells with flagged cells
+      if (!SafeCellsExist) {
+        slicedCell = slicedCell.map((row) =>
+          row.map((cell) => {
+            if (cell.value === CellValue.bomb) {
+              return {
+                ...cell,
+                state: CellState.flagged,
+              };
+            }
+            return cell;
+          })
+        );
+        setWin(true);
+      }
+      setCells(slicedCell);
+    };
 
   const handleCellContext =
     (rowParam: number, colParam: number) =>
@@ -139,18 +143,20 @@ const App: React.FC = () => {
       const currentCell = cells[rowParam][colParam];
       const slicedCell = cells.slice();
 
-      if (currentCell.state === CellState.clicked) {
-        return;
-      } else if (currentCell.state === CellState.open) {
-        slicedCell[rowParam][colParam].state = CellState.flagged;
-        setCells(slicedCell);
-        setFlag(flag - 1);
-        setStart(true);
-      } else if (currentCell.state === CellState.flagged) {
-        slicedCell[rowParam][colParam].state = CellState.open;
-        setCells(slicedCell);
-        setFlag(flag + 1);
-        setStart(true);
+      if (!lost) {
+        if (currentCell.state === CellState.clicked) {
+          return;
+        } else if (currentCell.state === CellState.open) {
+          slicedCell[rowParam][colParam].state = CellState.flagged;
+          setCells(slicedCell);
+          setFlag(flag - 1);
+          setStart(true);
+        } else if (currentCell.state === CellState.flagged) {
+          slicedCell[rowParam][colParam].state = CellState.open;
+          setCells(slicedCell);
+          setFlag(flag + 1);
+          setStart(true);
+        }
       }
     };
 
@@ -161,16 +167,24 @@ const App: React.FC = () => {
     setFlag(10);
     setLost(false);
     setWin(false);
+    setFace(Face.default);
   };
 
   const showAllBombs = (): Cell[][] => {
     const currentCell = cells.slice();
     return currentCell.map((row) =>
       row.map((cell) => {
-        if (cell.value === CellValue.bomb) {
+        if (cell.status === CellStatus.alive) {
+          if (cell.value === CellValue.bomb) {
+            return {
+              ...cell,
+              status: CellStatus.lost,
+              state: CellState.clicked,
+            };
+          }
           return {
             ...cell,
-            state: CellState.clicked,
+            status: CellStatus.lost,
           };
         }
         return cell;
@@ -185,6 +199,7 @@ const App: React.FC = () => {
           key={`${rowIndex}-${colIndex}`}
           state={cell.state}
           value={cell.value}
+          status={cell.status}
           row={rowIndex}
           col={colIndex}
           onClick={handleCellClick}

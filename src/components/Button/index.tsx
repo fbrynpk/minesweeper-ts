@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CellState, CellValue } from "../../types";
+import { CellState, CellStatus, CellValue } from "../../types";
 import "./Button.scss";
 
 interface ButtonProps {
@@ -7,6 +7,7 @@ interface ButtonProps {
   col: number;
   state: CellState;
   value: CellValue;
+  status: CellStatus;
   lose?: boolean;
   onClick: (
     rowParam: number,
@@ -23,6 +24,7 @@ const Button: React.FC<ButtonProps> = ({
   col,
   state,
   value,
+  status,
   lose,
   onClick,
   onContext,
@@ -46,9 +48,10 @@ const Button: React.FC<ButtonProps> = ({
     <div
       onClick={onClick(row, col)}
       onContextMenu={onContext(row, col)}
-      className={`Button ${
-        state === CellState.clicked ? "clicked" : ""
-      } value-${value} ${lose ? "lose" : ""}`}
+      className={`Button ${state === CellState.clicked ? "clicked" : ""}
+      ${status === CellStatus.lost ? "lost" : "alive"} value-${value} ${
+        lose ? "lose" : ""
+      }`}
     >
       {renderContent()}
     </div>
