@@ -58,7 +58,7 @@ export const generateCells = (): Cell[][] => {
       cells[row].push({
         value: CellValue.none,
         state: CellState.open,
-        status: CellStatus.alive,
+        status: CellStatus.default,
       });
     }
   }

@@ -49,9 +49,8 @@ const Button: React.FC<ButtonProps> = ({
       onClick={onClick(row, col)}
       onContextMenu={onContext(row, col)}
       className={`Button ${state === CellState.clicked ? "clicked" : ""}
-      ${status === CellStatus.lost ? "lost" : "alive"} value-${value} ${
-        lose ? "lose" : ""
-      }`}
+      ${status === CellStatus.finish ? "finish" : ""}
+       value-${value} ${lose ? "lose" : ""}`}
     >
       {renderContent()}
     </div>

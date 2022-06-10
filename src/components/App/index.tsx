@@ -19,14 +19,27 @@ const App: React.FC = () => {
   const [flag, setFlag] = useState<number>(10);
   const [lost, setLost] = useState<boolean>(false);
   const [win, setWin] = useState<boolean>(false);
+  // const [level, setLevel] = useState<number>(0);
 
   useEffect(() => {
     const handleMouseDown = (): void => {
-      !lost ? setFace(Face.clicked) : setFace(Face.lost);
+      if (lost) {
+        setFace(Face.lost);
+      } else if (win) {
+        setFace(Face.win);
+      } else {
+        setFace(Face.clicked);
+      }
     };
 
     const handleMouseUp = (): void => {
-      !lost ? setFace(Face.default) : setFace(Face.lost);
+      if (lost) {
+        setFace(Face.lost);
+      } else if (win) {
+        setFace(Face.win);
+      } else {
+        setFace(Face.default);
+      }
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -36,10 +49,10 @@ const App: React.FC = () => {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousedown", handleMouseDown);
     };
-  }, [lost]);
+  }, [lost, win]);
 
   useEffect(() => {
-    if (start && !lost) {
+    if (start && !lost && !win) {
       const timer = setInterval(() => {
         setTime(time + 1);
       }, 1000);
@@ -48,7 +61,7 @@ const App: React.FC = () => {
         clearInterval(timer);
       };
     }
-  }, [start, time, lost]);
+  }, [start, time, lost, win]);
 
   useEffect(() => {
     if (win) {
@@ -121,10 +134,17 @@ const App: React.FC = () => {
       if (!SafeCellsExist) {
         slicedCell = slicedCell.map((row) =>
           row.map((cell) => {
-            if (cell.value === CellValue.bomb) {
+            if (CellStatus.default) {
+              if (cell.value === CellValue.bomb) {
+                return {
+                  ...cell,
+                  status: CellStatus.finish,
+                  state: CellState.flagged,
+                };
+              }
               return {
                 ...cell,
-                state: CellState.flagged,
+                status: CellStatus.finish,
               };
             }
             return cell;
@@ -174,17 +194,17 @@ const App: React.FC = () => {
     const currentCell = cells.slice();
     return currentCell.map((row) =>
       row.map((cell) => {
-        if (cell.status === CellStatus.alive) {
+        if (cell.status === CellStatus.default) {
           if (cell.value === CellValue.bomb) {
             return {
               ...cell,
-              status: CellStatus.lost,
+              status: CellStatus.finish,
               state: CellState.clicked,
             };
           }
           return {
             ...cell,
-            status: CellStatus.lost,
+            status: CellStatus.finish,
           };
         }
         return cell;
