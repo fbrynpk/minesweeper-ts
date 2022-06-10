@@ -15,6 +15,10 @@
     border-width: 1px;
   }
 
+  &.lost {
+    pointer-events: none;
+  }
+
   span {
     margin-left: 2px;
     font-style: 12px;

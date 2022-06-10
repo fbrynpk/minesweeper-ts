@@ -17,7 +17,17 @@ export enum CellState {
   flagged,
 }
 
-export type Cell = { value: CellValue; state: CellState; lose?: boolean };
+export enum CellStatus {
+  lost,
+  alive,
+}
+
+export type Cell = {
+  value: CellValue;
+  state: CellState;
+  status: CellStatus;
+  lose?: boolean;
+};
 
 export enum Face {
   default = "😊",

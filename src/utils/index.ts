@@ -1,4 +1,10 @@
-import { Cell, CellValue, CellState, CellProps } from "../types/index";
+import {
+  Cell,
+  CellValue,
+  CellState,
+  CellProps,
+  CellStatus,
+} from "../types/index";
 
 export let MAX_ROWS = 9;
 export let MAX_COLS = 9;
@@ -52,6 +58,7 @@ export const generateCells = (): Cell[][] => {
       cells[row].push({
         value: CellValue.none,
         state: CellState.open,
+        status: CellStatus.alive,
       });
     }
   }
