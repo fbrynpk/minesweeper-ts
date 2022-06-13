@@ -78,82 +78,80 @@ const App: React.FC = () => {
     }
   }, [lost]);
 
-  const handleCellClick =
-    (rowParam: number, colParam: number) =>
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-      let currentCell = cells[rowParam][colParam];
-      let slicedCell = cells.slice();
+  const handleCellClick = (rowParam: number, colParam: number) => (): void => {
+    let currentCell = cells[rowParam][colParam];
+    let slicedCell = cells.slice();
 
-      //Avoid clicking a bomb on first try
-      if (!start) {
-        while (currentCell.value === CellValue.bomb) {
-          console.log("hit a bomb, regenerating cells", currentCell);
-          slicedCell = generateCells();
-          currentCell = slicedCell[rowParam][colParam];
-        }
-        setStart(true);
+    //Avoid clicking a bomb on first try
+    if (!start) {
+      while (currentCell.value === CellValue.bomb) {
+        console.log("hit a bomb, regenerating cells", currentCell);
+        slicedCell = generateCells();
+        currentCell = slicedCell[rowParam][colParam];
       }
+      setStart(true);
+    }
 
-      //Nothing happens when clicking a clicked cells or flagged cells
-      if ([CellState.clicked, CellState.flagged].includes(currentCell.state)) {
-        return;
+    //Nothing happens when clicking a clicked cells or flagged cells
+    if ([CellState.clicked, CellState.flagged].includes(currentCell.state)) {
+      return;
+    }
+
+    if (!lost) {
+      //All clicking possibilities
+      if (currentCell.value === CellValue.bomb) {
+        setLost(true);
+        slicedCell[rowParam][colParam].lose = true;
+        slicedCell = showAllBombs();
+        setCells(slicedCell);
+      } else if (currentCell.value === CellValue.none) {
+        slicedCell = checkAroundCell(slicedCell, rowParam, colParam);
+        setCells(slicedCell);
+      } else {
+        slicedCell[rowParam][colParam].state = CellState.clicked;
+        setCells(slicedCell);
       }
+    }
 
-      if (!lost) {
-        //All clicking possibilities
-        if (currentCell.value === CellValue.bomb) {
-          setLost(true);
-          slicedCell[rowParam][colParam].lose = true;
-          slicedCell = showAllBombs();
-          setCells(slicedCell);
-        } else if (currentCell.value === CellValue.none) {
-          slicedCell = checkAroundCell(slicedCell, rowParam, colParam);
-          setCells(slicedCell);
-        } else {
-          slicedCell[rowParam][colParam].state = CellState.clicked;
-          setCells(slicedCell);
-        }
-      }
+    //Check Win
+    let SafeCellsExist = false;
+    for (let row = 0; row < MAX_ROWS; row++) {
+      for (let col = 0; col < MAX_COLS; col++) {
+        const currentCell = slicedCell[row][col];
 
-      //Check Win
-      let SafeCellsExist = false;
-      for (let row = 0; row < MAX_ROWS; row++) {
-        for (let col = 0; col < MAX_COLS; col++) {
-          const currentCell = slicedCell[row][col];
-
-          if (
-            currentCell.value !== CellValue.bomb &&
-            currentCell.state === CellState.open
-          ) {
-            SafeCellsExist = true;
-            break;
-          }
+        if (
+          currentCell.value !== CellValue.bomb &&
+          currentCell.state === CellState.open
+        ) {
+          SafeCellsExist = true;
+          break;
         }
       }
-      //Replace bomb cells with flagged cells
-      if (!SafeCellsExist) {
-        slicedCell = slicedCell.map((row) =>
-          row.map((cell) => {
-            if (CellStatus.default) {
-              if (cell.value === CellValue.bomb) {
-                return {
-                  ...cell,
-                  status: CellStatus.finish,
-                  state: CellState.flagged,
-                };
-              }
+    }
+    //Replace bomb cells with flagged cells
+    if (!SafeCellsExist) {
+      slicedCell = slicedCell.map((row) =>
+        row.map((cell) => {
+          if (cell.status === CellStatus.default) {
+            if (cell.value === CellValue.bomb) {
               return {
                 ...cell,
                 status: CellStatus.finish,
+                state: CellState.flagged,
               };
             }
-            return cell;
-          })
-        );
-        setWin(true);
-      }
-      setCells(slicedCell);
-    };
+            return {
+              ...cell,
+              status: CellStatus.finish,
+            };
+          }
+          return cell;
+        })
+      );
+      setWin(true);
+    }
+    setCells(slicedCell);
+  };
 
   const handleCellContext =
     (rowParam: number, colParam: number) =>
